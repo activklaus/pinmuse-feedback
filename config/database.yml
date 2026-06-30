@@ -17,4 +17,5 @@ test:
 
 production:
   <<: *default
-  url: <%= ENV['DATABASE_URL'] %>
+  database: pinmuse_feedback_production
+  # url: <%= ENV['DATABASE_URL'] %>
