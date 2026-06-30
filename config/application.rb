@@ -13,6 +13,7 @@ module PinmuseFeedback
   class Application < Rails::Application
     config.load_defaults 7.1
     config.api_only = true
+    config.public_file_server.enabled = true
 
     config.time_zone = 'Berlin'
     config.active_record.default_timezone = :utc

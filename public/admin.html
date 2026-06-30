@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PinMuse Feedback</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: #F2F2F0;
+      color: #141414;
+      min-height: 100vh;
+    }
+
+    /* ── Login ── */
+    #login {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 40px;
+      width: 100%;
+      max-width: 380px;
+      border: 1px solid #DEDFD8;
+    }
+    .login-card h1 { font-size: 20px; margin-bottom: 6px; }
+    .login-card p  { font-size: 13px; color: #74776F; margin-bottom: 24px; }
+    .login-card input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #DEDFD8;
+      border-radius: 12px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      background: #FAFAF8;
+      outline: none;
+    }
+    .login-card input:focus { border-color: #3A4A3F; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 11px 20px;
+      border-radius: 100px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-forest { background: #3A4A3F; color: #EDEFE9; width: 100%; }
+    .btn-ghost  {
+      background: transparent;
+      color: #3A4A3F;
+      border: 1px solid #DEDFD8;
+      font-size: 12px;
+      padding: 7px 14px;
+    }
+
+    /* ── App shell ── */
+    #app { display: none; }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #DEDFD8;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 { font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+    header span { font-size: 11px; color: #74776F; margin-left: 8px; font-weight: 400; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ── Stats ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #DEDFD8;
+      padding: 16px 18px;
+    }
+    .stat-card .num  { font-size: 28px; font-weight: 700; line-height: 1; }
+    .stat-card .lbl  { font-size: 11px; color: #74776F; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── Filters ── */
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 100px;
+      border: 1px solid #DEDFD8;
+      background: #fff;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all .15s;
+      color: #3B3E39;
+    }
+    .filter-btn.active { background: #3A4A3F; color: #fff; border-color: #3A4A3F; }
+    .search-input {
+      margin-left: auto;
+      padding: 7px 14px;
+      border: 1px solid #DEDFD8;
+      border-radius: 100px;
+      font-size: 12.5px;
+      background: #fff;
+      outline: none;
+      width: 200px;
+    }
+    .search-input:focus { border-color: #3A4A3F; }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #DEDFD8;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 12px 16px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #74776F;
+      text-align: left;
+      border-bottom: 1px solid #DEDFD8;
+      background: #FAFAF8;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { color: #3A4A3F; }
+    tbody tr { border-bottom: 1px solid #E8E8E2; transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #FAFAF8; }
+    td { padding: 13px 16px; font-size: 13px; vertical-align: top; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-idea { background: #E8F0E9; color: #2A5A32; }
+    .badge-bug  { background: #FBEDE8; color: #8C3A1E; }
+    .badge-like { background: #F5E8EC; color: #7A2843; }
+
+    .msg { max-width: 340px; line-height: 1.5; color: #3B3E39; }
+    .meta { font-size: 11px; color: #74776F; margin-top: 3px; }
+
+    .screenshot-thumb {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #DEDFD8;
+      cursor: pointer;
+    }
+
+    /* ── Detail drawer ── */
+    #drawer {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 420px;
+      background: #fff;
+      border-left: 1px solid #DEDFD8;
+      overflow-y: auto;
+      padding: 24px;
+      transform: translateX(100%);
+      transition: transform .25s ease;
+      z-index: 100;
+    }
+    #drawer.open { transform: translateX(0); }
+    #drawer h2 { font-size: 16px; margin-bottom: 16px; }
+    .drawer-row { margin-bottom: 12px; }
+    .drawer-row .key { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #74776F; margin-bottom: 3px; }
+    .drawer-row .val { font-size: 13px; line-height: 1.5; word-break: break-all; }
+    #drawer-screenshot { width: 100%; border-radius: 10px; margin-top: 8px; border: 1px solid #DEDFD8; }
+    #drawer-close { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 18px; color: #74776F; background: none; border: none; }
+
+    /* ── Empty / error ── */
+    .empty { text-align: center; padding: 60px 20px; color: #74776F; font-size: 14px; }
+    .error-msg { color: #B5917B; font-size: 13px; margin-top: 8px; }
+
+    @media (max-width: 640px) {
+      #drawer { width: 100%; }
+      .search-input { width: 100%; margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login">
+  <div class="login-card">
+    <h1>PinMuse Feedback</h1>
+    <p>Admin-Zugang — API-Key eingeben</p>
+    <input id="key-input" type="password" placeholder="API Key" />
+    <p id="login-error" class="error-msg" style="display:none">Falscher API Key.</p>
+    <button class="btn btn-forest" onclick="doLogin()">Anmelden</button>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <div>
+      <h1>PinMuse Feedback <span id="total-badge"></span></h1>
+    </div>
+    <button class="btn btn-ghost" onclick="logout()">Abmelden</button>
+  </header>
+
+  <main>
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card"><div class="num" id="s-total">–</div><div class="lbl">Gesamt</div></div>
+      <div class="stat-card"><div class="num" id="s-idea">–</div><div class="lbl">💡 Ideen</div></div>
+      <div class="stat-card"><div class="num" id="s-bug">–</div><div class="lbl">🐛 Bugs</div></div>
+      <div class="stat-card"><div class="num" id="s-like">–</div><div class="lbl">❤️ Likes</div></div>
+      <div class="stat-card"><div class="num" id="s-today">–</div><div class="lbl">Heute</div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <button class="filter-btn active" data-cat="">Alle</button>
+      <button class="filter-btn" data-cat="idea">💡 Ideen</button>
+      <button class="filter-btn" data-cat="bug">🐛 Bugs</button>
+      <button class="filter-btn" data-cat="like">❤️ Likes</button>
+      <input class="search-input" id="search" type="text" placeholder="Suchen…" oninput="render()" />
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('category')">Kategorie</th>
+            <th onclick="sortBy('message')">Nachricht</th>
+            <th onclick="sortBy('email')">E-Mail</th>
+            <th onclick="sortBy('platform')">Gerät</th>
+            <th onclick="sortBy('created_at')">Datum ↓</th>
+            <th>Screenshot</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="empty" class="empty" style="display:none">Keine Einträge gefunden.</div>
+    </div>
+  </main>
+</div>
+
+<!-- Detail drawer -->
+<div id="drawer">
+  <button id="drawer-close" onclick="closeDrawer()">✕</button>
+  <h2 id="drawer-title"></h2>
+  <div id="drawer-content"></div>
+</div>
+
+<script>
+  const API = window.location.origin;
+  let allFeedbacks = [];
+  let activeCategory = '';
+  let sortKey = 'created_at';
+  let sortAsc = false;
+
+  // ── Auth ──
+  function getKey() { return localStorage.getItem('admin_key') || ''; }
+
+  async function doLogin() {
+    const key = document.getElementById('key-input').value.trim();
+    if (!key) return;
+    const res = await fetch(`${API}/feedbacks`, { headers: { 'X-Admin-Key': key } });
+    if (res.status === 401) {
+      document.getElementById('login-error').style.display = 'block';
+      return;
+    }
+    localStorage.setItem('admin_key', key);
+    document.getElementById('login-error').style.display = 'none';
+    allFeedbacks = await res.json();
+    showApp();
+  }
+
+  function logout() {
+    localStorage.removeItem('admin_key');
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login').style.display = 'flex';
+  }
+
+  document.getElementById('key-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  // ── Boot ──
+  async function boot() {
+    const key = getKey();
+    if (!key) return;
+    const res = await fetch(`${API}/feedbacks`, { headers: { 'X-Admin-Key': key } });
+    if (!res.ok) return;
+    allFeedbacks = await res.json();
+    showApp();
+  }
+
+  function showApp() {
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    updateStats();
+    render();
+  }
+
+  // ── Stats ──
+  function updateStats() {
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById('s-total').textContent = allFeedbacks.length;
+    document.getElementById('s-idea').textContent  = allFeedbacks.filter(f => f.category === 'idea').length;
+    document.getElementById('s-bug').textContent   = allFeedbacks.filter(f => f.category === 'bug').length;
+    document.getElementById('s-like').textContent  = allFeedbacks.filter(f => f.category === 'like').length;
+    document.getElementById('s-today').textContent = allFeedbacks.filter(f => f.created_at?.startsWith(today)).length;
+    document.getElementById('total-badge').textContent = `(${allFeedbacks.length})`;
+  }
+
+  // ── Filter + Sort ──
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      render();
+    });
+  });
+
+  function sortBy(key) {
+    if (sortKey === key) sortAsc = !sortAsc;
+    else { sortKey = key; sortAsc = false; }
+    render();
+  }
+
+  function render() {
+    const q = document.getElementById('search').value.toLowerCase();
+    let rows = allFeedbacks.filter(f => {
+      if (activeCategory && f.category !== activeCategory) return false;
+      if (q && !JSON.stringify(f).toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    rows.sort((a, b) => {
+      const av = a[sortKey] ?? '';
+      const bv = b[sortKey] ?? '';
+      return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+
+    const tbody = document.getElementById('tbody');
+    const empty  = document.getElementById('empty');
+    tbody.innerHTML = '';
+
+    if (rows.length === 0) {
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      rows.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.onclick = () => openDrawer(f);
+        tr.innerHTML = `
+          <td>${categoryBadge(f.category)}</td>
+          <td>
+            <div class="msg">${escHtml(f.message || '–')}</div>
+            ${f.screen ? `<div class="meta">📍 ${escHtml(f.screen)}</div>` : ''}
+          </td>
+          <td><div class="meta">${escHtml(f.email || '–')}</div></td>
+          <td>
+            <div class="meta">${escHtml(f.platform || '')} ${escHtml(f.os_version || '')}</div>
+            <div class="meta">${escHtml(f.device_model || '')}</div>
+            <div class="meta">v${escHtml(f.app_version || '?')}</div>
+          </td>
+          <td><div class="meta">${formatDate(f.created_at)}</div></td>
+          <td>${f.screenshot_filename
+            ? `<img class="screenshot-thumb" src="/screenshots/${escHtml(f.screenshot_filename)}" alt="Screenshot" onclick="event.stopPropagation()" />`
+            : '–'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  // ── Drawer ──
+  function openDrawer(f) {
+    document.getElementById('drawer-title').textContent =
+      `${categoryEmoji(f.category)} ${categoryLabel(f.category)}`;
+
+    const fields = [
+      ['Nachricht',       f.message],
+      ['E-Mail',          f.email],
+      ['Screen',          f.screen],
+      ['App-Version',     f.app_version],
+      ['Build',           f.build_number],
+      ['Plattform',       f.platform],
+      ['OS-Version',      f.os_version],
+      ['Sprache',         f.locale],
+      ['Gerät',           f.device_model],
+      ['User-ID',         f.user_id],
+      ['Datum',           formatDate(f.created_at)],
+    ];
+
+    let html = fields
+      .filter(([, v]) => v)
+      .map(([k, v]) => `<div class="drawer-row"><div class="key">${k}</div><div class="val">${escHtml(v)}</div></div>`)
+      .join('');
+
+    if (f.screenshot_filename) {
+      html += `<div class="drawer-row"><div class="key">Screenshot</div>
+        <img id="drawer-screenshot" src="/screenshots/${escHtml(f.screenshot_filename)}" alt="Screenshot" /></div>`;
+    }
+
+    document.getElementById('drawer-content').innerHTML = html;
+    document.getElementById('drawer').classList.add('open');
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+  }
+
+  // ── Helpers ──
+  function escHtml(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function categoryBadge(cat) {
+    const map = { idea: ['badge-idea','💡 Idee'], bug: ['badge-bug','🐛 Bug'], like: ['badge-like','❤️ Like'] };
+    const [cls, label] = map[cat] ?? ['','?'];
+    return `<span class="badge ${cls}">${label}</span>`;
+  }
+
+  function categoryEmoji(cat) {
+    return { idea: '💡', bug: '🐛', like: '❤️' }[cat] ?? '';
+  }
+
+  function categoryLabel(cat) {
+    return { idea: 'Idee', bug: 'Bug', like: 'Gefällt mir' }[cat] ?? cat;
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '–';
+    return new Date(iso).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  boot();
+</script>
+</body>
+</html>
